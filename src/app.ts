@@ -1,34 +1,36 @@
-import * as express from 'express';
-
+const express = require('express');
+const socket = require('socket.io');
+const cors = require('cors');
+const PORT = 8080;
 const app = express();
-const port = 6000;
-app.set('port', process.env.PORT || port);
 
-let http = require('http').Server(app);
-let io = require('socket.io')(http);
+app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('The sedulous hyena ate the antelope!');
+const server = app.listen(PORT, function () {
+  console.log(`Listening on port ${PORT}`);
+  console.log(`http://localhost:${PORT}`);
 });
-app.listen(port, () => {
-  return console.log(`server is listening on ${port}`);
-});
+
+// Socket setup
+const io = socket(server);
 
 const users = [];
 
+io.on('connect_error', (err: any) => {
+  console.log(`connect_error due to ${err.message}`);
+});
+
 io.on('connection', function (socket: any) {
+  console.log('Made socket connection');
   socket.on('add user', function (user_id: any) {
     users.push(user_id);
   });
 
   socket.on('chat message', function (msg: any) {
+    console.log(msg);
     io.emit('chat message', msg);
   });
   socket.on('voice sent', function (msg: any) {
     io.emit('voice received', msg);
   });
-});
-
-http.listen(3000, function () {
-  console.log('listening on *:6000');
 });
