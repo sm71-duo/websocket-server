@@ -1,11 +1,17 @@
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import express from 'express';
+const { instrument } = require('@socket.io/admin-ui');
 
 const app = express();
 const httpServer = createServer(app);
 
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['https://admin.socket.io'],
+    credentials: true,
+  },
+});
 
 const rooms: any[] = [];
 
@@ -16,6 +22,8 @@ io.on('connection', (socket: Socket) => {
     } else {
       rooms[roomId] = [socket.id];
     }
+
+    console.log(rooms);
 
     const otherUser = rooms[roomId].find((id: string) => id !== socket.id);
     if (otherUser) {
@@ -38,6 +46,10 @@ io.on('connection', (socket: Socket) => {
   socket.on('ice-candidate', (incoming) => {
     io.to(incoming.target).emit('ice-candidate', incoming.candidate);
   });
+});
+
+instrument(io, {
+  auth: false,
 });
 
 httpServer.listen(3000);
