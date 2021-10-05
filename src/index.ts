@@ -14,11 +14,22 @@ const io = new Server(httpServer, {
 });
 
 io.on('connection', (socket: Socket) => {
+  socket.on('join_room', (channel) => {
+    console.log(socket.id + ' joined room with name ' + channel);
+    socket.join(channel);
+  });
+
+  socket.on('leave_room', (channel) => {
+    console.log(socket.id + ' left room with name ' + channel);
+    socket.leave(channel);
+  });
+
   socket.on('user_talking', (payload) => {
     console.log(payload);
-    io.emit('talking', {
+    io.to(payload.channel).emit('talking', {
       talking: payload.talking,
       socketId: socket.id,
+      channel: payload.channel,
     });
   });
 });
